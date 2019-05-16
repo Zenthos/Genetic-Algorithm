@@ -35,7 +35,7 @@ class Screen:
 
     def draw_blocks(self, population):
         for block in population.population:
-            block.move(self.count)
+            block.move(self.count, population.target)
 
         for block in population.population:
             self.screen.fill(block.color, (block.position[0], block.position[1], block.size[0], block.size[1]))

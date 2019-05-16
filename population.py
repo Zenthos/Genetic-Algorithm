@@ -37,7 +37,7 @@ class Population:
 
     def calc_fit(self):
         for block in self.population:
-            block.evaluate()
+            block.evaluate(self.target)
 
     def calc_avg_fit(self):
         avg_sum = sum(block.fitness for block in self.population)
