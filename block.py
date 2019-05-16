@@ -16,7 +16,6 @@ class Block:
         dy = target[1] - self.position[1]
         if dx <= 0 and dy <= 0:
             self.fitness = 1.0 + self.bonus
-            print(self.fitness)
         else:
             self.fitness = 1 / math.sqrt((dx * dx) + (dy * dy))
 
