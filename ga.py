@@ -30,18 +30,14 @@ def cross_over(population, size, max_moves):
 def mutation(population, mutation_rate, size, max_moves):
     chance = random.randint(0, 100)
     num_mutated = random.randint(0, size)
+    num_moves_mutated = random.randint(o, max_moves)
 
     if chance >= 100 - mutation_rate:
         for _ in range(num_mutated):
             mutated_block = population[random.randint(0, len(population) - 1)]
-            for _ in range(50):
-                if chance >= 100 - mutation_rate/2:
-                    rand_x = random.randint(0, 1)
-                    rand_y = random.randint(0, 1)
-                else:
-                    rand_x = random.randint(-1, 1)
-                    rand_y = random.randint(-1, 1)
-
+            for _ in range(num_moves_mutated):
+                rand_x = random.randint(-1, 1)
+                rand_y = random.randint(-1, 1)
                 mutated_block.move_set[random.randint(0, max_moves - 1)] = [rand_x, rand_y]
 
     return population
