@@ -1,57 +1,47 @@
-import pygame
-import time
 import sys
-pygame.init()
+import pygame
+import pymunk.pygame_util
 
 
-class Screen:
+class Frame:
     def __init__(self):
-        self.screen_width = 600
+        self.screen_width = 800
         self.screen_height = 600
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height), pygame.SRCALPHA)
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.surface = pygame.Surface((self.screen_width, self.screen_height), pygame.SRCALPHA)
         self.font = pygame.font.SysFont("Arial", 16)
-        self.frames = 0
-        self.count = 0
-        self.time_at_run = time.process_time()
-        self.colors = {"RED": [255, 0, 0, 10],
-                       "GREEN": [0, 255, 0, 128],
-                       "BLUE": [0, 0, 255, 128],
-                       "WHITE": [255, 255, 255],
-                       "BLACK": [0, 0, 0]}
+        self.running = True
+        self.clock = pygame.time.Clock()
+        self.space = pymunk.Space()
+        self.handler = self.space.add_default_collision_handler()
+        self.handler.begin = self.begin
+        self.shapes_finished = []
+        pygame.display.set_caption("Genetic Algorithm 2.0")
 
-    def setup(self):
-        self.screen.fill(self.colors["BLACK"], (0, 0, self.screen_width, self.screen_height))
-        pygame.display.set_caption("Smart Blocks")
+    def begin(self, arbiter, space, data):
+        self.shapes_finished.append(arbiter.shapes[1])
+        return True
 
-    def calc_fps(self, population):
-        self.count += 1
-        if self.count % population.max_moves == 0:
-            t1 = time.process_time()
-            self.frames = 500 / (t1 - self.time_at_run)
-            self.time_at_run = t1
-            self.count = 0
-            population.perform_ga()
-            population.generation += 1
+    def draw(self, p):
+        self.screen.fill((0, 0, 0))
+        self.surface.fill((0, 0, 0))
 
-    def draw_blocks(self, population):
-        for block in population.population:
-            block.move(self.count, population.target)
+        self.surface.blit(self.font.render("Generation: {}".format(p.generation), True, (255, 255, 255)), (650, 10))
+        self.surface.blit(self.font.render("Lifespan: {}".format(p.lifespan), True, (255, 255, 255)), (650, 30))
+        self.surface.blit(self.font.render("{}".format(p.avg_fit), True, (255, 255, 255)), (650, 50))
+        self.surface.blit(self.font.render("Mutate Happened: {}".format(p.mutation_happened), True, (255, 255, 255)), (650, 70))
+        self.surface.blit(self.font.render("FPS: {:.2f}".format(self.clock.get_fps()), True, (255, 255, 255)), (10, 10))
 
-        for block in population.population:
-            self.screen.fill(block.color, (block.position[0], block.position[1], block.size[0], block.size[1]))
+        point = pymunk.pygame_util.to_pygame(p.target_body.position, self.screen)
+        pygame.draw.circle(self.surface, (255, 0, 0), point, int(p.target_shape.radius*2), 0)  # Target
 
-        self.screen.fill(self.colors["RED"], (population.target[0] + 10, population.target[1] + 10, 20, 20), 1)
+        for arrow in p.population:
+            arrow.draw(self.surface)
 
-    def draw_text(self, population):
-        frame_count = self.font.render("Frame = {0} fps Generation: {1}".format(self.count, population.generation), True, (255, 255, 255))
-        frame_rate = self.font.render("Frame_rate = {0:.2f}".format(self.frames), True, self.colors["WHITE"])
-        fitness_text = self.font.render("Average Fitness: {0}".format(population.avg_fit), True, self.colors["WHITE"])
+        p.check_finishers(self.shapes_finished)
+        self.screen.blit(self.surface, (0, 0))
 
-        self.screen.blit(fitness_text, (self.screen_width - 250, 10))
-        self.screen.blit(frame_count, (self.screen_width - 250, 40))
-        self.screen.blit(frame_rate, (self.screen_width - 250, 70))
-
-    @staticmethod
-    def exit():
+    def exit(self):
+        self.running = False
         pygame.quit()
         sys.exit()
