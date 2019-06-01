@@ -1,43 +1,49 @@
-from block import Block
+from vehicle import Arrow
 import random
 
 
-def selection(population):
-    population = sorted(population, key=lambda block: block.fitness, reverse=True)
-    best_fit = round(0.1 * len(population))
-    population = population[:best_fit]
-    return population
+def selection(p):
+    selected = sorted(p.population, key=lambda arrow: arrow.fitness, reverse=True)
+    best_fit = round(0.1 * len(selected))
+    p.population.clear()
+    p.population = selected[:best_fit]
 
 
-def cross_over(population, size, max_moves):
+def cross_over(p, screen, space):
     offspring = []
 
-    for _ in range(int(size/2)):
-        parents = random.sample(population, 2)
-        child1 = Block()
-        child2 = Block()
+    for arrow in p.population:
+        space.remove(arrow.body, arrow.shape)
 
-        split = random.randint(0, max_moves)
-        child1.move_set = parents[0].move_set[0:split] + parents[1].move_set[split:max_moves]
-        child2.move_set = parents[1].move_set[0:split] + parents[0].move_set[split:max_moves]
+    for _ in range(int(p.size)):
+        parents = random.sample(p.population, 2)
 
-        offspring.append(child1)
-        offspring.append(child2)
+        child = Arrow(screen)
+        split = random.randint(0, p.max_moves)
+        child.angle = parents[0].angle[0:split] + parents[1].angle[split:p.max_moves]
+        split = random.randint(0, p.max_moves)
+        child.velocity = parents[0].velocity[0:split] + parents[1].velocity[split:p.max_moves]
 
-    return offspring
+        space.add(child.body, child.shape)
+        offspring.append(child)
+
+    p.population.clear()
+    p.population = offspring
 
 
-def mutation(population, mutation_rate, size, max_moves):
+def mutation(p):
     chance = random.randint(0, 100)
-    num_mutated = random.randint(0, size)
-    num_moves_mutated = random.randint(o, max_moves)
+    num_mutated = random.randint(0, p.size)
 
-    if chance >= 100 - mutation_rate:
+    if chance >= 100 - p.mutation_rate:
+        p.mutation_happened = True
         for _ in range(num_mutated):
-            mutated_block = population[random.randint(0, len(population) - 1)]
-            for _ in range(num_moves_mutated):
-                rand_x = random.randint(-1, 1)
-                rand_y = random.randint(-1, 1)
-                mutated_block.move_set[random.randint(0, max_moves - 1)] = [rand_x, rand_y]
+            mutated_arrow = p.population[random.randint(0, len(p.population) - 1)]
+            for _ in range(50):
+                x = random.randint(-50, 150)
+                y = random.randint(-50, 150)
 
-    return population
+                mutated_arrow.angle[random.randint(0, p.max_moves - 1)] = random.uniform(-0.12, 0.12)
+                mutated_arrow.velocity[random.randint(0, p.max_moves - 1)] = (x, y)
+    else:
+        p.mutation_happened = False

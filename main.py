@@ -1,25 +1,34 @@
 import pygame
 import window
-import population as p
+import popul
 
 
 def main():
-    screen = window.Screen()
-    screen.setup()
-    population = p.Population()
-    population.create_population()
-    while True:
+    frame = window.Frame()
+    p = popul.Population()
+    frame.space.add(p.target_body, p.target_shape)
+    p.create_population(frame.screen, frame.space)
+    while frame.running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                screen.exit()
+                frame.exit()
 
-        screen.screen.fill((0, 0, 0), (0, 0, screen.screen_width, screen.screen_height))
-        screen.calc_fps(population)
-        screen.draw_blocks(population)
-        screen.draw_text(population)
-        pygame.time.Clock().tick()
+        if p.lifespan == 1000:
+            frame.shapes_finished.clear()
+            p.lifespan = 0
+            p.perform_ga(frame.screen, frame.space)
+        else:
+            p.lifespan += 1
+
+        for arrow in p.population:
+            arrow.move(p)
+
+        frame.draw(p)
+        frame.clock.tick(120)
+        frame.space.step(1 / 60.0)
         pygame.display.flip()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+    pygame.init()
     main()
